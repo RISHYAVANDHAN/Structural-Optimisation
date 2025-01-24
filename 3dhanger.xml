@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<cfsSimulation xmlns="http://www.cfs++.org/simulation" 
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+  xsi:schemaLocation="http://www.cfs++.org/simulation 
+  https://opencfs.gitlab.io/cfs/xml/CFS-Simulation/CFS.xsd">
+  
+  <fileFormats>
+    <output>
+      <hdf5 directory="."/>
+      <info/>
+    </output>
+    <materialData file="mat.xml" format="xml" />
+  </fileFormats>
+
+  <domain geometryType="3d">
+    <regionList>
+      <region material="99lines" name="mech" />
+      <region material="99lines" name="solid" />
+      <region material = "99lines" name="void" />
+    </regionList>
+    <nodeList>
+      <nodes name="top_surface">
+        <list>
+          <freeCoord comp="x" start="0.0" stop="1.0" inc="0.01" />
+          <freeCoord comp="z" start="3.0" stop="7.0" inc="0.01" />
+          <fixedCoord comp="y" value="5" />
+        </list>
+      </nodes>
+    </nodeList>
+  </domain>
+
+  <sequenceStep index="1">
+    <analysis>
+      <static />
+    </analysis>
+
+    <pdeList>
+      <mechanic subType="3d">
+        <regionList>
+          <region name="mech" />
+          <!-- <region name="solid" />
+          <region name="void " /> -->
+        </regionList>
+
+        <bcsAndLoads>
+          <fix name="top_surface">
+            <comp dof="x" />
+            <comp dof="y" />
+            <comp dof="z" />
+          </fix>
+          <force name="bottom">
+            <comp dof="y" value="-1" />
+          </force>
+        </bcsAndLoads>
+
+        <storeResults>
+          <elemResult type="physicalPseudoDensity">
+            <allRegions />
+          </elemResult>
+          <elemResult type="mechPseudoDensity">
+            <allRegions />
+          </elemResult>
+          <nodeResult type="mechDisplacement">
+            <allRegions />
+          </nodeResult>
+        </storeResults>
+      </mechanic>
+    </pdeList>
+
+    <linearSystems>
+      <system>
+        <solverList>
+          <pardiso></pardiso>
+        </solverList>
+      </system>
+    </linearSystems>
+  </sequenceStep>
+
+  <optimization>
+    <costFunction type="compliance" task="minimize">
+      <stopping value="0.001" type="relativeCostChange" />
+    </costFunction>
+
+    <constraint type="volume" value="0.5" bound="upperBound" linear="true" mode="constraint" />
+    <constraint type="greyness" mode="observation" />
+
+    <optimizer type="ocm" maxIterations="50" />
+
+    <ersatzMaterial region="mech" material="mechanic" method="simp">
+      <filters>
+        <filter neighborhood="maxEdge" value="1.3" />
+      </filters>
+
+      <design name="density" initial="0.5" physical_lower="1e-7" upper="1.0" />
+
+      <transferFunction type="simp" application="mech" param="3" />
+
+      <export save="last" write="iteration" />
+    </ersatzMaterial>
+    <commit mode="each_forward" stride="1" />
+  </optimization>
+
+</cfsSimulation>
