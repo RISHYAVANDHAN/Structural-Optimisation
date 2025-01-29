@@ -3,9 +3,13 @@ STSTOP Project - Hanger
 
 ### Command to run the files:
 
+$ python 3dhanger.py --res <10,50,100>
+
+run the different values separately to generate the 3 mesh files of different resolutions.
+
 $ python 3dhanger_run_res.py
 
-This is enough to run the file, make sure you run in CMD and not Powershell, OpenCFS is not supported in Powershell.
+Make sure you run in CMD and not Powershell, OpenCFS is not supported in Powershell.
 
 
 ## Install CFS
