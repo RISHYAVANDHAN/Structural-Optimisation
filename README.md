@@ -1,80 +1,96 @@
 # Structural-Optimisation
+
 STSTOP Project - Hanger
+
+## Running the Project
 
 ### Command to run the files:
 
-$ python 3dhanger.py --res <10,50,100>
+```bash
+# Generate mesh files with different resolutions
+python 3dhanger.py --res <10,50,100>
+```
 
-run the different values separately to generate the 3 mesh files of different resolutions.
+Run the command with different values separately to generate three mesh files of different resolutions.
 
-$ python 3dhanger_run_res.py
+```bash
+# Run the resolution script
+python 3dhanger_run_res.py
+```
 
-Make sure you run in CMD and not Powershell, OpenCFS is not supported in Powershell.
+**Important:** Make sure you run these commands in CMD and not PowerShell, as OpenCFS is not supported in PowerShell.
 
+## Installation Guide
 
-## Install CFS
+### Installing OpenCFS
 
-### Windows
+#### Windows
 
-Go to OpenCFS website to download the software, then
-We assume to install to the root of the user's directory
+1. Download the OpenCFS software from the official website
+2. Install to the root of your user directory: `C:\Users\<me>\openCFS`
+3. Add the following environment variables:
+   - `PYTHONPATH` with value `C:\Users\<me>\openCFS\share\python`
+   - `CFS` with value `C:\Users\<me>\openCFS\share\python`
+   - `CFS_QUIET` with value `1`
+4. Add `C:\Users\<me>\bin` to your PATH
+5. Create a directory `bin` in your user home and add the .bat files from "Windows .bat files"
+6. Install Python 3.12 from https://www.python.org/downloads/ (Note: This specific version works better than Anaconda)
+7. Ensure Python is in your PATH by testing in cmd: `python --version`
+8. Install required packages:
+   ```bash
+   pip install numpy matplotlib h5py lxml Pillow scipy vtk
+   ```
+   (Note: scipy and vtk are not critical)
 
-C:\Users\<me>\openCFS
+#### Testing the Installation
 
-Then add to in your users environment variables
+- Test Python: Run `create_mesh --res 20 --type bulk2d` in cmd
+- Test OpenCFS: Run `cfs --version` in cmd
 
-PYTHONPATH with the value C:\Users\<me>\openCFS\share\python
-CFS with value C:\Users\<me>\openCFS\share\python
-CFS_QUIET with the value 1
+#### macOS
 
-Add to your PATH the value  C:\Users\<me>\bin
-Create a directory binin your user home and add the .bat files from "Windows .bat files"
-We need Python and later it needs to be exactly Python 3.12 from https://www.python.org/downloads/ so better install it right now. 
-This python works better than Anaconda, make sure it is in your path.
+If you encounter an error during installation:
+1. Go to System Settings → Privacy and Security
+2. Scroll down to the "Security" heading and click "Open Anyway" to override Apple's security block
 
-Test in cmd by calling python if it is the proper version.
+Installation steps:
+1. Install Homebrew from https://brew.sh/
+2. Unpack OpenCFS to `/Users/<ME>/openCFS`
+3. Edit the hidden `.zshrc` file and add the following lines:
+   ```bash
+   export PATH=$PATH:$HOME/openCFS/bin:$HOME/openCFS/share/python
+   export PYTHONPATH=$PYTHONPATH:$HOME/openCFS/share/python
+   export CFS_QUIET=1
+   ```
+4. Install the required Python packages as listed in the Windows section
 
-Also in cmd call pip install numpy matplotlib h5py lxml Pillow scipy vtk (scipy and vtk are not that important)
-A test for python is to call in cmd the command create_mesh --res 20 --type bulk2d
-A test for cfs is to call in cmd the command cfs --version
+### Installing Paraview
 
-### macOS
+Download and install the latest version of Paraview from https://www.paraview.org/download/
 
-If there is an error which does not allow mac to install the software then follow the steps below;
-1. Go to System Settings -> Privact and Security
-2. Scroll down till the heading Security -> open anyways (it is a prompt which has a button to override apple security block on unauthorized application or software installation)
-
-You need homebre installed from https://brew.sh/
-Unpack openCFS, e.g. to /Users/<ME>/openCFS
-Edit the hidden file .zshrc and add the following lines (where $HOME has automatically the value /Users/<ME>
-
-export PATH=$PATH:$HOME/openCFS/bin:$HOME/openCFS/share/python
-export PYTHONPATH=$PYTHONPATH:$HOME/openCFS/share/python
-export CFS_QUIET=1
-
-Make sure you have the proper python packages installed the "tests" from above work.
-
-### Paraview
-Install a latest Paraview from https://www.paraview.org/download/
-
-### Run CFS
+## Running CFS
 
 ### Command Line Options
 
-Get the availble options via cfs --help. You are encouraged to experiments with the options.
+Get the available options via `cfs --help`. You are encouraged to experiment with these options.
 
-An example for calling cfs is cfs -m cantilever2d_20.mesh mech2d_cholmod. The name of the simulation is mech2d_cholmod and the generated output files will start with mech2d_cholmod. As no input xml problem file is given, cfs looks for mech2d_cholmod.xml.
+Example commands:
+- Basic simulation: `cfs -m cantilever2d_20.mesh mech2d_cholmod`
+  - This looks for `mech2d_cholmod.xml` as the problem file
+  - Output files will start with `mech2d_cholmod`
 
-If you want to keep the result files, (e.g. the .info.xml files) to compare them, use the following schema:
+- To keep result files for comparison: `cfs -m cantilever2d_20.mesh -p mech2d_cholmod.xml problem`
+  - Output files will start with `problem`
 
-cfs -m cantilever2d_20.mesh -p mech2d_cholmod.xml problem. Now all generated output files start with problem.
+- To visualize a mesh file: `cfs -g -m cantilever2d_20.mesh mech2d_cholmod`
+  - Generates a `.cfs` output file with mesh visualization
+  - Skips the simulation (the settings in the `<pde>` section of the problem xml file are not read)
 
-An easy way to visualize a mesh file, e.g. what are the names of named nodes and where are they, ... is by the following option:
-cfs -g -m cantilever2d_20.mesh mech2d_cholmod
-A .cfs output file is generated but the simulation is omitted, the file content is the mesh. This way the settings in the <pde> section of the problem xml file are not read. 
+## Saving Disk Space
 
-##Save Disk Space
-CFS++ may generate large output files, especially when performing optimization and doing parameter studies. The following steps save a lot output.
-In the simulation part in <storeResults> have in <nodeResult> and <elemResult> no region output
-Remove the hdf5 output writer
-In the optimization part use for <commit> a large stride, e.g. 9999
+CFS++ may generate large output files, especially when performing optimization and parameter studies. To save disk space:
+
+1. In the simulation part in `<storeResults>`:
+   - Have no region output in `<nodeResult>` and `<elemResult>`
+2. Remove the HDF5 output writer
+3. In the optimization part, use a large stride for `<commit>`, e.g., 9999
